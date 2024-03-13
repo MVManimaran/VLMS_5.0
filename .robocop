@@ -1,0 +1,10 @@
+--exclude line-too-long
+--exclude file-too-long
+--exclude unused-variable
+--exclude mixed-tabs-and-spaces
+--configure too-many-calls-in-test-case:max_calls:25
+--configure too-long-test-case:max_len:25
+--configure too-many-calls-in-keyword:max_calls:34
+--configure too-many-arguments:max_args:7
+--configure too-long-keyword:max_len:44
+--reports all

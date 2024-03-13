@@ -1,0 +1,4 @@
+-r requirements.txt
+robotframework-metrics
+wxPython
+robotframework-ride
