@@ -1,0 +1,6 @@
+--variable BROWSER_NAME:Chrome
+--variable BASE_URL:https://vlmsdev.valgenesis.in/VGV5DEV/Login/Login.aspx
+--variable USER:qzuser2
+--variable USER_PASSWORD:valgen
+--variable SUPER_ADMIN:superadmin_01
+--variable SUPER_ADMIN_PASSWORD:valgen

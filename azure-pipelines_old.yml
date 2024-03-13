@@ -1,0 +1,164 @@
+parameters:
+- name: browser
+  displayName: 'Browser Options'
+  type: string
+  default: 'chrome'
+  values:
+  - 'chrome'
+  - 'edge'
+  - 'firefox'
+
+schedules:
+- cron: '45 10 28 12 *'
+  displayName: Scheduled build
+  branches:
+    include:
+    - features/add-assign-doc20
+  always: true
+
+trigger:
+- '*'
+
+stages:
+# - stage: static_analysis
+  # condition: or(eq(variables['Build.Reason'], 'Manual'), eq(variables['Build.Reason'], 'Schedule'))
+  # jobs:
+  # - job: robocop
+  #   pool:
+  #     vmImage: 'windows-latest'
+  #   variables:
+  #     python.version: '3.12.1'
+  #     PIP_CACHE_DIR: $(Pipeline.Workspace)/.pip
+
+  #   steps:
+  #   - task: UsePythonVersion@0
+  #     displayName: 'Use Python $(python.version)'
+  #     inputs:
+  #       versionSpec: '$(python.version)'
+
+  #   - task: Cache@2
+  #     inputs:
+  #       key: 'python | "$(Agent.OS)" | requirements.txt'
+  #       restoreKeys: | 
+  #         python | "$(Agent.OS)"
+  #         python
+  #       path: $(PIP_CACHE_DIR)
+  #     displayName: Cache pip packages
+
+  #   - script: |
+  #       python -m pip install --upgrade pip
+  #       pip install robotframework-robocop
+  #     displayName: 'Install Dependencies'
+
+  #   - script: |
+  #       robocop
+  #     failOnStderr: true
+  #     displayName: 'Static Code Analysis'
+
+- stage: end_to_end_test
+  # condition: or(eq(variables['Build.Reason'], 'Manual'), eq(variables['Build.Reason'], 'Schedule'))
+  jobs:
+  - job: run_keyword_testcases
+    timeoutInMinutes: 0
+    pool:
+      vmImage: 'windows-latest'
+    variables:
+      python.version: '3.11'
+      PIP_CACHE_DIR: $(Pipeline.Workspace)/.pip
+
+    steps:
+    - task: UsePythonVersion@0
+      displayName: 'Use Python $(python.version)'
+      inputs:
+        versionSpec: '$(python.version)'
+
+    - task: Cache@2
+      inputs:
+        key: 'python | "$(Agent.OS)" | requirements.txt'
+        restoreKeys: | 
+          python | "$(Agent.OS)"
+          python
+        path: $(PIP_CACHE_DIR)
+      displayName: Cache pip packages
+      
+    - script: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        npm install chromedriver
+        npm install edgedriver
+        npm install geckodriver
+      displayName: 'Install Dependencies'
+
+    - script: |
+        robot --variable BROWSER_NAME:${{ parameters.browser }} --pythonpath . -x outputxunit.xml -d reports -i Sample VLMS5.0_Regression
+      displayName: 'Run UI Tests'
+
+    - task: PublishTestResults@2
+      displayName: 'Publish Test Results'
+      condition: succeededOrFailed()
+      inputs:
+        testResultsFormat: 'JUnit'
+        testResultsFiles: 'reports/outputxunit.xml'
+        testRunTitle: 'TestRun_$(Build.Repository.Name)_$(Build.BuildNumber)'
+
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Robotframework Logs'
+      condition: succeededOrFailed()
+      inputs:
+        PathtoPublish: 'reports'
+        ArtifactName: 'reports'
+        publishLocation: 'Container'
+
+- stage: parallel_run
+  condition: eq(variables['Build.Reason'], 'Manual')
+  jobs:
+  - job: run_parallel_testcases
+    timeoutInMinutes: 0
+    pool:
+      vmImage: 'windows-latest'
+    variables:
+      python.version: '3.11'
+      PIP_CACHE_DIR: $(Pipeline.Workspace)/.pip
+
+    steps:
+    - task: UsePythonVersion@0
+      displayName: 'Use Python $(python.version)'
+      inputs:
+        versionSpec: '$(python.version)'
+
+    - task: Cache@2
+      inputs:
+        key: 'python | "$(Agent.OS)" | requirements.txt'
+        restoreKeys: | 
+          python | "$(Agent.OS)"
+          python
+        path: $(PIP_CACHE_DIR)
+      displayName: Cache pip packages
+      
+    - script: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        npm install chromedriver
+        npm install edgedriver
+        npm install geckodriver
+      displayName: 'Install Dependencies'
+
+    - script: |
+        pabot --processes 2 --pythonpath . -x outputxunit.xml --argumentfile Pabot/QA-env.txt --outputdir parallel_run -i sample KeywordTestcases
+      displayName: 'Run UI Tests'
+
+    - task: PublishTestResults@2
+      displayName: 'Publish Test Results'
+      condition: succeededOrFailed()
+      inputs:
+        testResultsFormat: 'JUnit'
+        testResultsFiles: 'parallel_run/outputxunit.xml'
+        testRunTitle: 'TestRun_$(Build.Repository.Name)_$(Build.BuildNumber)'
+
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Robotframework Logs'
+      condition: succeededOrFailed()
+      inputs:
+        PathtoPublish: 'parallel_run'
+        ArtifactName: 'parallel_run'
+        publishLocation: 'Container'

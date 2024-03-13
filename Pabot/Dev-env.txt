@@ -1,0 +1,4 @@
+--variable BROWSER_NAME:Edge
+--variable BASE_URL:https://vlmsdev.valgenesis.in/VGV5DEV/Login/Login.aspx
+--variable USER:qzuser1
+--variable USER_PASSWORD:valgen
