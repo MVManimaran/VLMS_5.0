@@ -9,6 +9,7 @@ Library           RetryFailed
 Library           Pdf2TextLibrary
 Library           ScreenCapLibrary
 Library           ../Library/CustomLibrary.py
+Library           ../Library/report.py
 Resource          common_variables.resource
 Resource          ../ObjectRepository/Web/buttons.resource
 Resource          ../ObjectRepository/Web/icons.resource
