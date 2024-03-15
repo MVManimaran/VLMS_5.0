@@ -4,4 +4,4 @@ Documentation     This radiobutton file has all radiobutton type locators of web
 
 *** Variables ***
 # robocop: disable=section-variable-not-uppercase
-${radiobutton.common.value}    //input[contains(@value,'replaceText')]
+${radiobutton.common.value}    //input[contains(@value,"replaceText")]

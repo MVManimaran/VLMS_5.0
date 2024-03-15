@@ -54,63 +54,6 @@ class CustomLibrary(object):
                 return True
             except:
                 return False
-            
-        def convert_xls_2_xlsx(self, xls_path, xlsx_path):
-            # Create temp xlsx-File
-            if os.path.exists(xlsx_path): os.remove(xlsx_path)
-            excel = win32.Dispatch("Excel.Application")
-            excel.Visible = 0
-            wb = excel.Workbooks.Open(xls_path)
-            wb.SaveAs(xlsx_path, FileFormat = 51)    #FileFormat = 51 is for .xlsx extension
-            wb.Close()
-
-        def get_summary_view_details_from_excel(self, filepath):
-            # get the summary vew details from excel file
-            workbook = openpyxl.load_workbook(filepath)
-            sheet_names = workbook.sheetnames
-            # Choose the sheet by index (e.g., the first sheet)
-            selected_sheet = workbook[sheet_names[0]]
-            key1 = selected_sheet['A4'].value
-            key2 = selected_sheet['B4'].value
-            key3 = selected_sheet['C4'].value
-            key4 = selected_sheet['D4'].value
-            key5 = selected_sheet['E4'].value
-            key6 = selected_sheet['F4'].value
-            # # Accessing values using row and column indices
-            summary_keys = [str(key1), str(key2), str(key3), str(key4), str(key5), str(key6)]
-            # Assuming the row index is 4 (0-based) since you are trying to access row 5
-            value1 = selected_sheet['A5'].value
-            value2 = selected_sheet['B5'].value
-            value3 = selected_sheet['C5'].value
-            value4 = selected_sheet['D5'].value
-            value5 = selected_sheet['E5'].value
-            value6 = selected_sheet['F5'].value
-
-            summary_values = [int(value1), int(value2), int(value3), int(value4), int(value5), int(value6)]
-            summary = self.create_dictionary_from_two_lists(summary_keys,summary_values)
-            summary = {x.replace(' ', ''): v 
-                    for x, v in summary.items()}
-            return  summary
-
-        def get_project_ids_from_excel(self, filepath, projectids_count):
-            # get the project ids from the Excel file
-            workbook = openpyxl.load_workbook(filepath)
-            # Assuming you want to read values from the first sheet
-            sheet = workbook.worksheets[0]
-            # Assuming A, B, C, D, E, F are column indices (1-based in openpyxl)
-            col_index = 1
-            # Assuming the row index is 14 (1-based)
-            row_index = 14
-            row_index_range = row_index + int(projectids_count)
-            project_ids = []
-            # Accessing values using row and column indices
-            for row_No in range(row_index, row_index_range):
-                project_id = sheet.cell(row=row_No, column=col_index).value
-                # You can add additional processing here if needed
-                # project_id = project_id.replace(' ', '')
-                project_ids.append(str(project_id))
-
-            return project_ids
 
         def create_dictionary_from_two_lists(self,key_list,value_list):
             # using dict() and zip() to convert lists to dictionary
@@ -343,19 +286,6 @@ class CustomLibrary(object):
             allure.attach.file(path, name=png_name, attachment_type=allure.attachment_type.JPG)
             return path
 
-        def upload_supporting_documents(self, choosebutton, filepath):
-                try:
-                    element = self._driver.find_element("xpath", choosebutton)
-                    self._driver.execute_script("arguments[0].setAttribute('style', 'top: 0px;');",element)
-                    time.sleep(2)
-                    element = self._driver.find_element("xpath", choosebutton)
-                    element.send_keys(filepath)
-                except Exception as e:
-                    # If an exception occurs, take a screenshot
-                    filename = time.strftime("%H%M%S")
-                    self.screenshot_page(filename)
-                    raise AssertionError(f"Failed due to: {e}")
-
         def open_file_and_take_screenshot(self, path, file_name, kill='None', app='None'):
             subprocess.Popen([path], shell=True)
             time.sleep(7)
@@ -364,89 +294,7 @@ class CustomLibrary(object):
             file = file_name + cur_time+'.png'
             screenshot.save(file)
             if kill!='None': os.system("taskkill /f /im "+ app +".exe")
-        
-        def add_new_row_values(self, row_values):
-            try:
-                row_values_list = row_values.split(',')
-                for rowIndex in range(0,len(row_values_list)):
-                    pyautogui.press('tab')
-                    pyautogui.typewrite(row_values_list[rowIndex])
-            except Exception as e:
-                # If an exception occurs, take a screenshot
-                filename = time.strftime("%H%M%S")
-                self.screenshot_page(filename)
-                raise AssertionError(f"Failed due to: {e}")
-        
-        def add_table_values(self, header_values, row_values):
-            try:
-                header_values_list =   header_values.split(',')
-                row_values_list =   row_values.split('|')
-                for headerIndex in range(0,len(header_values_list)):
-                    pyautogui.typewrite(header_values_list[headerIndex])
-                    pyautogui.press('right')
-                for rowIndex in range(0, len(row_values_list)):
-                    row_values_str = str(row_values_list[rowIndex])
-                    splitted_row_values =   row_values_str.split(',')
-                    for headerIndex in range(0,len(header_values_list)):
-                        pyautogui.typewrite(splitted_row_values[headerIndex])
-                        pyautogui.press('right')
-            except Exception as e:
-                # If an exception occurs, take a screenshot
-                filename = time.strftime("%H%M%S")
-                self.screenshot_page(filename)
-                raise AssertionError(f"Failed due to: {e}")
-
-
-        def add_row_to_table(self, doc, table_index, data):
-            table = doc.tables[table_index]
-            new_row = table.add_row()
-            row_values_list = data.split(',')
-            if len(row_values_list) == len(new_row.cells):
-                for col_index, value in enumerate(row_values_list):
-                    new_row.cells[col_index].text = value.strip()  # Remove leading and trailing whitespaces
-            else:
-                raise ValueError("Number of columns in the table and length of row_values_list do not match.")
-
-        def delete_row_from_table(self, doc, table_index, row_index):
-            table = doc.tables[table_index]
-            row = table.rows[row_index]
-            table._tbl.remove(row._element)
-
-        def remove_row(self, doc, row):
-            tbl = doc.table._tbl
-            tr = row._tr
-            tbl.remove(tr)
-
-        def append_table_cell_value(self, doc, table_index, row_index, col_index, data):
-            table = doc.tables[table_index]
-            cell = table.cell(row_index, col_index)
-            cell.text += " " + data
-
-        def delete_table_cell_data(self, doc, table_index, row_index, col_index):
-            table = doc.tables[table_index]
-            cell = table.cell(row_index, col_index)
-            cell.text = ""
-
-        def open_word_file_and_edit(self, path, new_row_values, header_values, row_values, appended_text):
-            document = Document(path)
-            self.add_row_to_table(document, 0, new_row_values)
-            self.delete_row_from_table(document, 0, 2)
-            self.add_table_to_document(document, header_values, row_values)
-            self.append_table_cell_value(document, 2, 1, 1, appended_text)
-            self.delete_table_cell_data(document, 2, 1, 2)
-            document.save(path)
-
-        def click_page_down_and_left(self):
-            try:
-                ActionChains(self._driver).key_down(Keys.PAGE_DOWN).key_up(Keys.PAGE_DOWN).perform()
-                time.sleep(2)
-                ActionChains(self._driver).key_down(Keys.LEFT).key_up(Keys.LEFT).perform()
-            except Exception as e:
-                # If an exception occurs, take a screenshot
-                filename = time.strftime("%H%M%S")
-                self.screenshot_page(filename)
-                raise AssertionError(f"Failed due to: {e}")
-                           
+               
         def press_keyboard_key(self, key_name):
             try:
                 pyautogui.press(key_name)
@@ -470,15 +318,6 @@ class CustomLibrary(object):
                 pyautogui.hotkey(key_name1, key_name2)
             except Exception as e:
                 # If an exception occurs, take a screenshot
-                filename = time.strftime("%H%M%S")
-                self.screenshot_page(filename)
-                raise AssertionError(f"Failed due to: {e}")
-       
-        def select_cells(self, count, keyname):
-            try:
-                for _ in range(int(count)):
-                    pyautogui.hotkey('ctrl','shiftright','shiftleft',keyname)
-            except Exception as e:
                 filename = time.strftime("%H%M%S")
                 self.screenshot_page(filename)
                 raise AssertionError(f"Failed due to: {e}")
@@ -626,7 +465,7 @@ class CustomLibrary(object):
                 data_values[data]['ColumnC'].append(value_c)
 
             return data_values
-            
+
         def get_column_values(self, file_path, sheet_name, column_name):
             try:
                 # Read the Excel file

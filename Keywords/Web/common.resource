@@ -172,7 +172,8 @@ Wait Till Loading Icon Is Invisible
 
 Select Submit/Cancel Button
     [Arguments]    ${button_option}
-    [Documentation]    It is used to select submit or reset button
+    [Documentation]    It is used to select submit or cancel button
+    Set Selenium Implicit Wait    ${MEDIUM_WAIT}
     ${button.newsubmit/cancel}    Update Dynamic Value    ${button.submit/cancel}    ${button_option}
     Scroll Till Element Is Visible    ${button.newsubmit/cancel}
     Wait Until Time    2
@@ -194,8 +195,8 @@ Verify Multiple Texts In A Page
 Enter Text In Mandatory Fields
     [Arguments]    ${text_field}    ${text}
     [Documentation]    This keyword is used to enter text in mandatory textbox field
+    Set Selenium Implicit Wait    ${MEDIUM_WAIT}
     ${textbox.common.mandatory.newtext_field}    Update Dynamic Value    ${textbox.common.mandatory.text_field}    ${text_field}
-    Wait Until Element Is Visible    ${textbox.common.mandatory.newtext_field}    ${MEDIUM_WAIT}    ${text_field} is not visible after waiting for ${MEDIUM_WAIT} seconds
     Wait Until Time    2
     Input Text    ${textbox.common.mandatory.newtext_field}    ${text}
 
@@ -238,3 +239,20 @@ Stop Recording
     [Documentation]    This Keyword Is Used to Stop Video Recording
     [Arguments]    ${record}    ${alias}=None
     IF    '${VIDEO}'=='True' or '${record}'=='True'    ScreenCapLibrary.Stop Video Recording    alias=${alias}
+
+Select Action Type
+    [Arguments]    ${action_type}
+    [Documentation]    This keyword is used to select action type from action dropdown
+    Set Selenium Implicit Wait    ${MEDIUM_WAIT}
+    Click Element    ${dropdown.action}
+    ${dropdown.action.newaction_type}    Update Dynamic Value    ${dropdown.action.action_type}    ${action_type}
+    Click Element    ${dropdown.action.newaction_type}
+
+Verify Success Message
+    [Arguments]    ${message}
+    [Documentation]    It is used to Verify the success message
+    ${status}    Run Keyword And Return Status    Wait Until Keyword Succeeds    5s    1s    Element Text Should Be    ${label.success_msg}    ${message}    ignore_case=True
+    IF    '${status}'=='True'
+        Log Expected And Actual Results For Keywords    Success message should be Displayed    Success message is Displayed
+    END
+    IF    '${SCREENSHOT}'=='True'    Capture Allure Screenshot
