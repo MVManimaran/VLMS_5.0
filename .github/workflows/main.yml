@@ -36,6 +36,15 @@ on:
           - headless
           - headed
         default: "headless"
+      workers:
+        description: "Number of workers"
+        type: number
+        options:
+          - 1
+          - 2
+          - 3
+          - 4
+        default: 1
 
 jobs:
   test:
